@@ -14,10 +14,10 @@ develop:
 	$(POETRY) install --all-extras --with dev
 
 logs:
-	$(PYTHON) -m lars_analytics.cli logs $(LOGS_DIR) --csv-dir $(CSV_DIR) --pattern "$(LOGS_PATTERN)"
+	$(POETRY) run lars-analytics logs $(LOGS_DIR) --csv-dir $(CSV_DIR) --pattern "$(LOGS_PATTERN)"
 
 analytics:
-	$(PYTHON) -m lars_analytics.cli analytics --csv-dir $(CSV_DIR) --output-dir $(OUTPUT_DIR) --base-url $(BASE_URL) --title "$(TITLE)"
+	$(POETRY) run lars-analytics analytics --csv-dir $(CSV_DIR) --output-dir $(OUTPUT_DIR) --base-url $(BASE_URL) --title "$(TITLE)"
 
 lint:
 	$(POETRY) run isort . --check-only
