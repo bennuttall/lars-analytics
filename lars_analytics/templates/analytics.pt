@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>${title}</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; background: #f5f5f5; color: #222; padding: 2rem; }
+    .container { width: 640px; margin: 0 auto; }
+    h1 { font-size: 1.5rem; margin-bottom: 1.5rem; }
+    .cards { display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap; }
+    .card { background: #fff; border-radius: 8px; padding: 1.25rem 1.75rem; box-shadow: 0 1px 3px rgba(0,0,0,.1); }
+    .card .value { font-size: 2rem; font-weight: 700; }
+    .card .label { font-size: .85rem; color: #666; margin-top: .2rem; }
+    .panel { background: #fff; border-radius: 8px; padding: 1.25rem; box-shadow: 0 1px 3px rgba(0,0,0,.1); margin-bottom: 1.5rem; }
+    .panel h2 { font-size: 1rem; margin-bottom: 1rem; color: #444; }
+    table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+    th { text-align: left; padding: .4rem .6rem; border-bottom: 2px solid #eee; color: #666; font-weight: 600; }
+    th:last-child { width: 4rem; }
+    td { padding: .4rem .6rem; border-bottom: 1px solid #f0f0f0; vertical-align: middle; }
+    td:last-child { color: #555; white-space: nowrap; }
+    tr:last-child td { border-bottom: none; }
+    .file-path { font-family: monospace; font-size: .85rem; word-break: break-all; }
+    .ext-badge { display: inline-block; font-family: monospace; font-size: .7rem; padding: .1rem .4rem; border-radius: 3px; background: #e8e8e8; color: #555; vertical-align: middle; margin-left: .4rem; white-space: nowrap; }
+    tfoot td { border-bottom: none; padding: .5rem .6rem; }
+    .expand-btn { background: none; border: none; color: #4f81c7; cursor: pointer; font-size: .85rem; padding: 0; text-decoration: underline; }
+    .expand-btn:hover { color: #2a5a9f; }
+    .ext-link { color: #bbb; text-decoration: none; vertical-align: middle; margin-left: .2rem; }
+    .ext-link:hover { color: #4f81c7; }
+    .ref-link { color: #222; text-decoration: none; }
+    .ref-link:hover { text-decoration: underline; }
+    nav { margin-bottom: 1.5rem; }
+    .breadcrumbs { font-size: .85rem; color: #888; margin-bottom: .6rem; }
+    .breadcrumbs a { color: #4f81c7; text-decoration: none; }
+    .breadcrumbs a:hover { text-decoration: underline; }
+    .breadcrumbs span + span::before { content: " / "; color: #ccc; }
+    .nav-links { display: flex; gap: .5rem; flex-wrap: wrap; }
+    .nav-links a { background: #fff; border-radius: 6px; padding: .3rem .8rem; font-size: .85rem; color: #4f81c7; text-decoration: none; box-shadow: 0 1px 3px rgba(0,0,0,.1); }
+    .nav-links a:hover { background: #4f81c7; color: #fff; }
+    .nav-links a.current { background: #4f81c7; color: #fff; pointer-events: none; }
+    .prev-next { display: flex; justify-content: space-between; margin-top: .6rem; font-size: .85rem; }
+    .prev-next a { color: #4f81c7; text-decoration: none; }
+    .prev-next a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <nav>
+    <div class="breadcrumbs" tal:condition="nav['breadcrumbs']">
+      <span tal:repeat="crumb nav['breadcrumbs']"><a tal:attributes="href crumb['url']">${crumb['label']}</a></span>
+    </div>
+    <div class="nav-links" tal:condition="nav.get('years')">
+      <a tal:repeat="item nav['years']"
+         tal:attributes="href item['url']; class python: 'current' if item.get('current') else None">${item['label']}</a>
+    </div>
+    <div class="nav-links" tal:condition="nav.get('months')" tal:attributes="style python: 'margin-top: .5rem' if nav.get('years') else None">
+      <a tal:repeat="item nav['months']"
+         tal:attributes="href item['url']; class python: 'current' if item.get('current') else None">${item['label']}</a>
+    </div>
+    <div class="prev-next" tal:condition="python: nav.get('prev') or nav.get('next')">
+      <a tal:condition="nav.get('prev')" tal:attributes="href nav['prev']['url']">&larr; ${nav['prev']['label']}</a>
+      <span tal:condition="not: nav.get('prev')"></span>
+      <a tal:condition="nav.get('next')" tal:attributes="href nav['next']['url']">${nav['next']['label']} &rarr;</a>
+    </div>
+  </nav>
+
+  <h1>${title}</h1>
+
+  <tal:block tal:define="
+    fmt python: lambda d: datetime.strptime(d, '%Y-%m-%d').strftime('%-d %B %Y');
+    date_range python: fmt(report['date_from']) if report['date_from'] == report['date_to'] else fmt(report['date_from']) + ' – ' + fmt(report['date_to']);
+  ">
+  <div class="cards">
+    <div class="card"><div class="value" tal:content="python: '{:,}'.format(report['total_hits'])">0</div><div class="label">Total hits</div></div>
+    <div class="card"><div class="value" tal:content="python: '{:.1f}%'.format(report['bot_hits'])">0%</div><div class="label">Bot hits</div></div>
+    <div class="card"><div class="value" tal:content="python: '{:,}'.format(report['unique_ips'])">0</div><div class="label">Unique IPs</div></div>
+    <div class="card"><div class="value">${date_range}</div><div class="label">Date range</div></div>
+  </div>
+  </tal:block>
+
+  <div class="panel">
+    <h2>Hits by month</h2>
+    <canvas id="monthChart"></canvas>
+  </div>
+
+  <div class="panel">
+    <h2>Hits by day</h2>
+    <canvas id="dayChart"></canvas>
+  </div>
+
+  <!-- Top files -->
+  <div class="panel" tal:condition="report['top_files']" tal:define="files report['top_files']; top files[:10]; rest files[10:]">
+    <h2>Top files</h2>
+    <table>
+      <thead><tr><th>Path</th><th>Hits</th></tr></thead>
+      <tbody>
+        <tr tal:repeat="f top">
+          <td>
+            <span class="file-path">${f['path']}</span>
+            <a tal:condition="report['base_url']"
+               tal:attributes="href report['base_url'].rstrip('/') + f['path']"
+               target="_blank" rel="noopener" class="ext-link">&#8599;</a>
+            <tal:block tal:condition="python: f['ext'] != '/'">
+              <span class="ext-badge">${f['ext']}</span>
+            </tal:block>
+          </td>
+          <td tal:content="python: '{:,}'.format(f['hits'])">0</td>
+        </tr>
+      </tbody>
+      <tbody class="more" hidden="hidden" tal:condition="rest">
+        <tr tal:repeat="f rest">
+          <td>
+            <span class="file-path">${f['path']}</span>
+            <a tal:condition="report['base_url']"
+               tal:attributes="href report['base_url'].rstrip('/') + f['path']"
+               target="_blank" rel="noopener" class="ext-link">&#8599;</a>
+            <tal:block tal:condition="python: f['ext'] != '/'">
+              <span class="ext-badge">${f['ext']}</span>
+            </tal:block>
+          </td>
+          <td tal:content="python: '{:,}'.format(f['hits'])">0</td>
+        </tr>
+      </tbody>
+      <tfoot tal:condition="rest">
+        <tr><td colspan="2">
+          <button class="expand-btn" onclick="toggleMore(this)" tal:content="python: f'Show {len(rest)} more'">Show more</button>
+        </td></tr>
+      </tfoot>
+    </table>
+  </div>
+
+  <!-- Root files -->
+  <div class="panel" tal:condition="report['root_files']" tal:define="files report['root_files']; top files[:10]; rest files[10:]">
+    <h2>Top files in root</h2>
+    <table>
+      <thead><tr><th>Path</th><th>Hits</th></tr></thead>
+      <tbody>
+        <tr tal:repeat="f top">
+          <td>
+            <span class="file-path">${f['path']}</span>
+            <a tal:condition="report['base_url']"
+               tal:attributes="href report['base_url'].rstrip('/') + f['path']"
+               target="_blank" rel="noopener" class="ext-link">&#8599;</a>
+            <tal:block tal:condition="python: f['ext'] != '/'">
+              <span class="ext-badge">${f['ext']}</span>
+            </tal:block>
+          </td>
+          <td tal:content="python: '{:,}'.format(f['hits'])">0</td>
+        </tr>
+      </tbody>
+      <tbody class="more" hidden="hidden" tal:condition="rest">
+        <tr tal:repeat="f rest">
+          <td>
+            <span class="file-path">${f['path']}</span>
+            <a tal:condition="report['base_url']"
+               tal:attributes="href report['base_url'].rstrip('/') + f['path']"
+               target="_blank" rel="noopener" class="ext-link">&#8599;</a>
+            <tal:block tal:condition="python: f['ext'] != '/'">
+              <span class="ext-badge">${f['ext']}</span>
+            </tal:block>
+          </td>
+          <td tal:content="python: '{:,}'.format(f['hits'])">0</td>
+        </tr>
+      </tbody>
+      <tfoot tal:condition="rest">
+        <tr><td colspan="2">
+          <button class="expand-btn" onclick="toggleMore(this)" tal:content="python: f'Show {len(rest)} more'">Show more</button>
+        </td></tr>
+      </tfoot>
+    </table>
+  </div>
+
+  <!-- Extensions -->
+  <div class="panel" tal:condition="report['ext_counts']">
+    <h2>File types</h2>
+    <canvas id="extChart"></canvas>
+  </div>
+
+  <!-- Directories -->
+  <div class="panel" tal:condition="python: len(report['dir_counts']) > 1">
+    <h2>Directories</h2>
+    <canvas id="dirChart"></canvas>
+  </div>
+
+  <!-- Referring sites -->
+  <div class="panel" tal:define="counts report['referer_counts']; top counts[:10]; rest counts[10:]">
+    <h2>Referring sites</h2>
+    <table>
+      <thead><tr><th>Domain</th><th>Hits</th></tr></thead>
+      <tbody>
+        <tr tal:repeat="item top">
+          <td><a tal:attributes="href 'https://' + item[0]" target="_blank" rel="noopener" class="ref-link">${item[0]} &#8599;</a></td>
+          <td tal:content="python: '{:,}'.format(item[1])">0</td>
+        </tr>
+      </tbody>
+      <tbody class="more" hidden="hidden" tal:condition="rest">
+        <tr tal:repeat="item rest">
+          <td><a tal:attributes="href 'https://' + item[0]" target="_blank" rel="noopener" class="ref-link">${item[0]} &#8599;</a></td>
+          <td tal:content="python: '{:,}'.format(item[1])">0</td>
+        </tr>
+      </tbody>
+      <tfoot tal:condition="rest">
+        <tr><td colspan="2">
+          <button class="expand-btn" onclick="toggleMore(this)" tal:content="python: f'Show {len(rest)} more'">Show more</button>
+        </td></tr>
+      </tfoot>
+    </table>
+  </div>
+
+  <!-- User agents -->
+  <div class="panel">
+    <h2>User agents</h2>
+    <canvas id="uaChart"></canvas>
+  </div>
+
+</div>
+
+<script>
+new Chart(document.getElementById('monthChart'), {
+  type: 'bar',
+  data: {
+    labels: <tal:block replace="structure python: json.dumps([datetime.strptime(m, '%Y-%m').strftime('%B %Y') for m in report['months']])" />,
+    datasets: [{ data: <tal:block replace="structure json.dumps(report['hits_by_month'])" />, backgroundColor: '#4f81c7', borderRadius: 3 }]
+  },
+  options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+});
+
+new Chart(document.getElementById('dayChart'), {
+  type: 'bar',
+  data: {
+    labels: <tal:block replace="structure python: json.dumps([datetime.strptime(d, '%Y-%m-%d').strftime('%-d %B') for d in report['dates']])" />,
+    datasets: [{ data: <tal:block replace="structure json.dumps(report['hits_by_day'])" />, backgroundColor: '#4f81c7', borderRadius: 3 }]
+  },
+  options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+});
+
+<tal:block tal:condition="report['ext_counts']">
+new Chart(document.getElementById('extChart'), {
+  type: 'bar',
+  data: {
+    labels: <tal:block replace="structure python: json.dumps([item['ext'] for item in report['ext_counts']])" />,
+    datasets: [{ data: <tal:block replace="structure python: json.dumps([item['hits'] for item in report['ext_counts']])" />, backgroundColor: '#4f81c7', borderRadius: 3 }]
+  },
+  options: {
+    indexAxis: 'y',
+    plugins: { legend: { display: false } },
+    scales: { x: { beginAtZero: true } }
+  }
+});
+</tal:block>
+
+<tal:block tal:condition="python: len(report['dir_counts']) > 1">
+new Chart(document.getElementById('dirChart'), {
+  type: 'bar',
+  data: {
+    labels: <tal:block replace="structure python: json.dumps([item['dir'] for item in report['dir_counts']])" />,
+    datasets: [{ data: <tal:block replace="structure python: json.dumps([item['hits'] for item in report['dir_counts']])" />, backgroundColor: '#4f81c7', borderRadius: 3 }]
+  },
+  options: {
+    indexAxis: 'y',
+    plugins: { legend: { display: false } },
+    scales: { x: { beginAtZero: true } }
+  }
+});
+</tal:block>
+
+new Chart(document.getElementById('uaChart'), {
+  type: 'bar',
+  data: {
+    labels: <tal:block replace="structure python: json.dumps([item['ua'] for item in report['ua_counts']])" />,
+    datasets: [{ data: <tal:block replace="structure python: json.dumps([item['hits'] for item in report['ua_counts']])" />, backgroundColor: <tal:block replace="structure python: json.dumps(['#aaa' if item['is_bot'] else '#4f81c7' for item in report['ua_counts']])" />, borderRadius: 3 }]
+  },
+  options: {
+    indexAxis: 'y',
+    plugins: { legend: { display: false } },
+    scales: { x: { beginAtZero: true } }
+  }
+});
+
+function toggleMore(btn) {
+  const more = btn.closest('table').querySelector('.more');
+  const hidden = more.hidden;
+  more.hidden = !hidden;
+  btn.textContent = hidden ? 'Show less' : 'Show ' + more.rows.length + ' more';
+}
+</script>
+</body>
+</html>
